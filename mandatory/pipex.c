@@ -6,7 +6,7 @@
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/11 18:02:07 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/14 18:20:07 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/15 22:47:38 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ char	*path_check(char *command, char **env, int end[])
 	if (access(command, F_OK) != -1)
 		return (command);
 	i = 0;
-	paths = ft_split(env[4] + 5, ':');
+	paths = ft_split(where_path(env), ':');
 	if (!paths)
 		exit(1);
 	cmnd = ft_strjoin("/", command);
@@ -53,11 +53,11 @@ void	command2(int end[], char **av, char **env)
 	char	*path;
 	char	**commands;
 
-	// if (!av[4][0] || !av[3][0])
-	// {
-	// 	write(2, "wrong parameters", 17);
-	// 	(fds_closer(end), exit(1));
-	// }
+	if (!av[4][0] || !av[3][0])
+	{
+		write(2, "wrong parameters", 17);
+		(fds_closer(end), exit(1));
+	}
 	fd = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	if (fd < 0)
 		exit(1);
@@ -77,16 +77,16 @@ void	command1(int end[], char **av, char **env)
 	char	*path;
 	char	**commands;
 
-	// if (!av[1][0] || !av[2][0])
-	// {
-	// 	write(2, "wrong parameters", 17);
-	// 	(fds_closer(end), exit(1));
-	// }
+	if (!av[1][0] || !av[2][0])
+	{
+		write(2, "wrong parameters", 17);
+		(fds_closer(end), exit(1));
+	}
 	if (access(av[1], F_OK) < 0)
 		write(2, "no such file or directory : file1", 34);
 	fd = open(av[1], O_RDONLY);
 	if (fd < 0)
-		exit(1);
+		(write(2,"error in file1", 15), exit(1));
 	commands = ft_split(av[2], ' ');
 	path = path_check(commands[0], env, end);
 	if (!commands || !path)

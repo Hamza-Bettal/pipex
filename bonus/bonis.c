@@ -1,16 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex_bonus.c                                      :+:      :+:    :+:   */
+/*   bonis.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 15:40:58 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/15 23:11:01 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/15 15:24:17 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex_bonus.h"
+
+// void	fds_closer(int end[])
+// {
+// 	close(end[0]);
+// 	close(end[1]);
+// }
 
 char	*path_check(char *command, char **env, int end[])
 {
@@ -22,7 +28,7 @@ char	*path_check(char *command, char **env, int end[])
 	if (access(command, F_OK) != -1)
 		return (command);
 	i = 0;
-	paths = ft_split(where_path(env), ':');
+	paths = ft_split(env[4] + 5, ':');
 	if (!paths)
 		exit(1);
 	cmnd = ft_strjoin("/", command);
@@ -41,7 +47,24 @@ char	*path_check(char *command, char **env, int end[])
 	return (NULL);
 }
 
-void	child_commands(int end[], char **av, char **env, int i)
+// void	parent_command(int end[], char **av, char **env, int i)
+// {
+// 	char	*path;
+// 	char	**commands;
+
+// 	if (!av[i][0])
+// 		(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
+// 	commands = ft_split(av[i], ' ');
+// 	path = path_check(commands[0], env, end);
+// 	if (!commands || !path)
+// 		(fds_closer(end), exit(1));
+// 	dup2(end[0], 0);
+// 	fds_closer(end);
+// 	// if (execve(path, commands, env) < 0)
+// 	// 	exit(1);
+// }
+
+void	child_command(int end[], char **av, char **env, int i)
 {
 	char	*path;
 	char	**commands;
@@ -58,75 +81,44 @@ void	child_commands(int end[], char **av, char **env, int i)
 	exit(1);
 }
 
-void	last_cmd(int end[], char **av, char **env, int ac)
-{
-	int		fd;
-	char	*path;
-	char	**commands;
-
-	fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
-	if (fd < 0)
-		exit(1);
-	dup2(fd, 1);
-	close(fd);
-	if (!av[ac - 2][0])
-		(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
-	commands = ft_split(av[ac - 2], ' ');
-	path = path_check(commands[0], env, end);
-	if (!commands || !path)
-		(fds_closer(end), exit(1));
-	dup2(end[0], 0);
-	fds_closer(end);
-	execve(path, commands, env);
-	exit(1);
-}
-
-void	first_cmd(int end[], char **av, char **env)
-{
-	int		fd;
-	char	*path;
-	char	**commands;
-
-	fd = open(av[1], O_RDONLY);
-	if (fd < 0)
-		exit(1);
-	dup2(fd, 0);
-	close(fd);
-	if (!av[2][0])
-		(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
-	commands = ft_split(av[2], ' ');
-	printf("\n%s\n", commands[0]);
-	path = path_check(commands[0], env, end);
-	if (!commands || !path)
-		(fds_closer(end), exit(1));
-	dup2(end[1], 1);
-	fds_closer(end);
-	execve(path, commands, env);
-	exit(1);
-}
-
 int	main(int ac, char **av, char **env)
 {
+	pid_t	id;
+	int		fd;
+	int		fd2;
 	int		end[2];
 	int		i;
 
-	i = 4;
-	if (ac < 5)
-		return (write(2, "missing parameters", 17), 1);
-	if (pipe(end))
-		return (1);
-	if (fork() == 0)
-		first_cmd(end, av, env);
-	while (i < ac - 2)
+	fd = open(av[1], O_RDONLY);
+	fd2 = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	if (fd < 0)
+		exit(1);
+	dup2(fd, 0);
+	i = 2;
+	while (i < ac - 1)
 	{
-		pipe(end);
-		if (fork() == 0)
-			child_commands(end, av, env, i);
+		printf("cmd = %s\n", av[i]);
+		if (i < ac - 2)
+			pipe(end);
+		else
+			dup2(fd2, 1);
+		id = fork();
+		if (id == 0)
+		{
+			close(fd);
+			close(fd2);
+			child_command(end, av, env, i - 1);
+		}
+		else
+		{
+			close(fd);
+			close(fd2);
+		}
 		dup2(end[0], 0);
-		fds_closer(end);
 		++i;
 	}
-	last_cmd(end, av, env, ac);
+	dup2(fd2, 1);
+	(fds_closer(end), close(fd), close(fd2));
 	while (wait(NULL) > 0)
 		;
 }

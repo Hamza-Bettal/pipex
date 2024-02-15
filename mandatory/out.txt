@@ -1,8 +1,0 @@
-a.out
-explain.tldr
-ft_split.c
-main.c
-out.txt
-pipex.c
-pipex.h
-utilities.c

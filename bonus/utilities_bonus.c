@@ -1,16 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utilities.c                                        :+:      :+:    :+:   */
+/*   utilities_bonus.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/12 15:51:12 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/15 21:33:58 by hbettal          ###   ########.fr       */
+/*   Created: 2024/02/14 23:14:07 by hbettal           #+#    #+#             */
+/*   Updated: 2024/02/15 21:29:17 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "pipex.h"
+#include "pipex_bonus.h"
+
+void	free_handler(char **str)
+{
+	int	i;
+
+	i = 0;
+	while (str[i++])
+		free(str[i]);
+	free (str);
+}
 
 char	*where_path(char **env)
 {

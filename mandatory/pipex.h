@@ -6,7 +6,7 @@
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 15:40:54 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/12 19:00:49 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/15 21:35:13 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,5 +24,6 @@ char	*ft_strdup(char *s1);
 size_t	ft_strlen(char *s);
 char	*ft_strjoin(char *s1, char *s2);
 void	free_handler(char **str);
+char	*where_path(char **env);
 
 #endif
