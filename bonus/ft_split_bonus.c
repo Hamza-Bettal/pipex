@@ -6,7 +6,7 @@
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 22:43:59 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/15 21:11:45 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/16 22:41:54 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,10 +77,12 @@ static char	**strs_split(char **strs, char *s, char c)
 char	**ft_split(char *s, char c)
 {
 	char	**strs;
+	int		words;
 
 	if (!s)
 		return (NULL);
-	strs = (char **)malloc((count_words(s, c) + 1) * sizeof(char *));
+	words = count_words(s, c);
+	strs = (char **)malloc((words + 1) * sizeof(char *));
 	if (!strs)
 		return (NULL);
 	return (strs_split(strs, s, c));

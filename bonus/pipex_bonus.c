@@ -6,7 +6,7 @@
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 15:40:58 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/15 23:11:01 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/17 03:49:53 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,21 +41,24 @@ char	*path_check(char *command, char **env, int end[])
 	return (NULL);
 }
 
-void	child_commands(int end[], char **av, char **env, int i)
+void	middle_commands(int end[], char **av, char **env, int i)
 {
 	char	*path;
 	char	**commands;
 
-	if (!av[i][0])
-		(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
-	commands = ft_split(av[i], ' ');
-	path = path_check(commands[0], env, end);
-	if (!commands || !path)
-		(fds_closer(end), exit(1));
-	dup2(end[1], 1);
-	fds_closer(end);
-	execve(path, commands, env);
-	exit(1);
+	if (fork() == 0)
+	{
+		if (!av[i][0])
+			(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
+		commands = ft_split(av[i], ' ');
+		path = path_check(commands[0], env, end);
+		if (!commands || !path)
+			(fds_closer(end), exit(1));
+		dup2(end[1], 1);
+		fds_closer(end);
+		execve(path, commands, env);
+		exit(1);
+	}
 }
 
 void	last_cmd(int end[], char **av, char **env, int ac)
@@ -64,21 +67,22 @@ void	last_cmd(int end[], char **av, char **env, int ac)
 	char	*path;
 	char	**commands;
 
-	fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
-	if (fd < 0)
+	if (fork() == 0)
+	{
+		fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		if (fd < 0)
+			exit(1);
+		dup2(fd, 1);
+		close(fd);
+		if (!av[ac - 2][0])
+			(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
+		commands = ft_split(av[ac - 2], ' ');
+		path = path_check(commands[0], env, end);
+		if (!commands || !path)
+			exit(1);
+		execve(path, commands, env);
 		exit(1);
-	dup2(fd, 1);
-	close(fd);
-	if (!av[ac - 2][0])
-		(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
-	commands = ft_split(av[ac - 2], ' ');
-	path = path_check(commands[0], env, end);
-	if (!commands || !path)
-		(fds_closer(end), exit(1));
-	dup2(end[0], 0);
-	fds_closer(end);
-	execve(path, commands, env);
-	exit(1);
+	}
 }
 
 void	first_cmd(int end[], char **av, char **env)
@@ -87,46 +91,52 @@ void	first_cmd(int end[], char **av, char **env)
 	char	*path;
 	char	**commands;
 
-	fd = open(av[1], O_RDONLY);
-	if (fd < 0)
+	if (fork() == 0)
+	{
+		fd = open(av[1], O_RDONLY);
+		if (fd < 0)
+			exit(1);
+		if (dup2(fd, 0) < 0)
+			exit(1);
+		close(fd);
+		if (!av[2][0])
+			(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
+		commands = ft_split(av[2], ' ');
+		path = path_check(commands[0], env, end);
+		if (!commands || !path)
+			(fds_closer(end), exit(1));
+		dup2(end[1], 1);
+		fds_closer(end);
+		execve(path, commands, env);
 		exit(1);
-	dup2(fd, 0);
-	close(fd);
-	if (!av[2][0])
-		(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
-	commands = ft_split(av[2], ' ');
-	printf("\n%s\n", commands[0]);
-	path = path_check(commands[0], env, end);
-	if (!commands || !path)
-		(fds_closer(end), exit(1));
-	dup2(end[1], 1);
-	fds_closer(end);
-	execve(path, commands, env);
-	exit(1);
+	}
 }
 
 int	main(int ac, char **av, char **env)
 {
-	int		end[2];
-	int		i;
+	t_pipex	pipex;
 
-	i = 4;
-	if (ac < 5)
+	pipex.i = 2;
+	if (ac < 5 || pipe(pipex.end))
 		return (write(2, "missing parameters", 17), 1);
-	if (pipe(end))
-		return (1);
-	if (fork() == 0)
-		first_cmd(end, av, env);
-	while (i < ac - 2)
+	if (!ft_strcmp(av[1], "here_doc"))
+		(ft_here_doc(pipex.end, ac, av), close(pipex.end[1]), pipex.i++);
+	else
+		(first_cmd(pipex.end, av, env), close(pipex.end[1]));
+	pipex.input = pipex.end[0];
+	while (pipex.i++ < ac - 3)
 	{
-		pipe(end);
-		if (fork() == 0)
-			child_commands(end, av, env, i);
-		dup2(end[0], 0);
-		fds_closer(end);
-		++i;
+		if (dup2(pipex.input, 0) < 0)
+			return (write (2, "dup2 failed", 12), 1);
+		close(pipex.input);
+		if (pipe(pipex.end) < 0)
+			return (write(2, "pipe failed", 10), 1);
+		(middle_commands(pipex.end, av, env, pipex.i), close(pipex.end[1]));
+		pipex.input = pipex.end[0];
 	}
-	last_cmd(end, av, env, ac);
-	while (wait(NULL) > 0)
+	if (dup2(pipex.input, 0) < 0)
+		return (write (2, "dup2 failed", 12), 1);
+	(close(pipex.input), last_cmd(pipex.end, av, env, ac), close(0));
+	while (wait(NULL) != -1)
 		;
 }
