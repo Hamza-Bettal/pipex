@@ -6,7 +6,7 @@
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 18:54:07 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/15 21:33:30 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/17 19:08:35 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ size_t	ft_strlen(char *s)
 		i++;
 	return (i);
 }
+
 static int	count_words(char *s, int c)
 {
 	int	i;

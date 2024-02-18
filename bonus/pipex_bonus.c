@@ -6,7 +6,7 @@
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/14 15:40:58 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/17 03:49:53 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/18 21:15:13 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,8 @@ void	middle_commands(int end[], char **av, char **env, int i)
 		path = path_check(commands[0], env, end);
 		if (!commands || !path)
 			(fds_closer(end), exit(1));
-		dup2(end[1], 1);
+		if (dup2(end[1], 1) == -1)
+			return (fds_closer(end), exit(1));
 		fds_closer(end);
 		execve(path, commands, env);
 		exit(1);
@@ -69,10 +70,14 @@ void	last_cmd(int end[], char **av, char **env, int ac)
 
 	if (fork() == 0)
 	{
-		fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		if (!ft_strncmp(av[1], "here_doc", 8))
+			fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+		else
+			fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		if (fd < 0)
 			exit(1);
-		dup2(fd, 1);
+		if (dup2(fd, 1) == -1)
+			return (fds_closer(end), close(fd), exit(1));
 		close(fd);
 		if (!av[ac - 2][0])
 			(write(2, "wrong parameters", 17), fds_closer(end), exit(1));
@@ -80,6 +85,7 @@ void	last_cmd(int end[], char **av, char **env, int ac)
 		path = path_check(commands[0], env, end);
 		if (!commands || !path)
 			exit(1);
+		fds_closer(end);
 		execve(path, commands, env);
 		exit(1);
 	}
@@ -105,10 +111,10 @@ void	first_cmd(int end[], char **av, char **env)
 		path = path_check(commands[0], env, end);
 		if (!commands || !path)
 			(fds_closer(end), exit(1));
-		dup2(end[1], 1);
+		if (dup2(end[1], 1) == -1)
+			return (fds_closer(end), exit(1));
 		fds_closer(end);
-		execve(path, commands, env);
-		exit(1);
+		(execve(path, commands, env), exit(1));
 	}
 }
 
@@ -117,9 +123,9 @@ int	main(int ac, char **av, char **env)
 	t_pipex	pipex;
 
 	pipex.i = 2;
-	if (ac < 5 || pipe(pipex.end))
+	if (ac < 5 || pipe(pipex.end) == -1)
 		return (write(2, "missing parameters", 17), 1);
-	if (!ft_strcmp(av[1], "here_doc"))
+	if (!ft_strncmp(av[1], "here_doc", 8))
 		(ft_here_doc(pipex.end, ac, av), close(pipex.end[1]), pipex.i++);
 	else
 		(first_cmd(pipex.end, av, env), close(pipex.end[1]));
@@ -129,10 +135,10 @@ int	main(int ac, char **av, char **env)
 		if (dup2(pipex.input, 0) < 0)
 			return (write (2, "dup2 failed", 12), 1);
 		close(pipex.input);
-		if (pipe(pipex.end) < 0)
+		if (pipe(pipex.end) == -1)
 			return (write(2, "pipe failed", 10), 1);
 		(middle_commands(pipex.end, av, env, pipex.i), close(pipex.end[1]));
-		pipex.input = pipex.end[0];
+		pipex.input = pipex.end[0]; //end[1] == 3 --> input == 3
 	}
 	if (dup2(pipex.input, 0) < 0)
 		return (write (2, "dup2 failed", 12), 1);

@@ -6,11 +6,11 @@
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/10 13:51:07 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/17 02:39:21 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/17 19:18:35 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line.h"
+#include "pipex_bonus.h"
 
 char	*ft_strchr(char *s, int c)
 {

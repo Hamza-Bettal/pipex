@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2024/02/17 20:25:07 by hbettal           #+#    #+#              #
+#    Updated: 2024/02/17 20:27:17 by hbettal          ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 NAME = pipex
 NAME_BONUS = pipex_bonus
 CC = cc
@@ -19,7 +31,10 @@ $(NAME): $(SRC_OBJ)
 $(NAME_BONUS): $(BONUS_OBJS)
 	$(CC) $(CFLAGS) $(BONUS_OBJS) -o $(NAME_BONUS)
 
-%.o: %.c mandatory/pipex.h bonus/pipex_bonus.h
+bonus/%.o: bonus/%.c bonus/pipex_bonus.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+mandatory/%.o: mandatory/%.c mandatory/pipex.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

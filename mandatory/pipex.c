@@ -6,7 +6,7 @@
 /*   By: hbettal <hbettal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/11 18:02:07 by hbettal           #+#    #+#             */
-/*   Updated: 2024/02/15 22:47:38 by hbettal          ###   ########.fr       */
+/*   Updated: 2024/02/17 20:26:07 by hbettal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,15 +58,16 @@ void	command2(int end[], char **av, char **env)
 		write(2, "wrong parameters", 17);
 		(fds_closer(end), exit(1));
 	}
-	fd = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	fd = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0)
 		exit(1);
 	commands = ft_split(av[3], ' ');
 	path = path_check(commands[0], env, end);
 	if (!commands || !path)
 		(close(fd), exit(1));
-	(dup2(fd, 1), close(fd));
-	(dup2(end[0], 0), fds_closer(end));
+	if (dup2(fd, 1) == -1 || dup2(end[0], 0) == -1)
+		(close(fd), fds_closer(end), exit(1));
+	(close(fd), fds_closer(end));
 	if (execve(path, commands, env) < 0)
 		exit(1);
 }
@@ -86,15 +87,14 @@ void	command1(int end[], char **av, char **env)
 		write(2, "no such file or directory : file1", 34);
 	fd = open(av[1], O_RDONLY);
 	if (fd < 0)
-		(write(2,"error in file1", 15), exit(1));
+		(write(2, "error in file1", 15), exit(1));
 	commands = ft_split(av[2], ' ');
 	path = path_check(commands[0], env, end);
 	if (!commands || !path)
 		(close(fd), exit(1));
-	dup2(fd, 0);
-	close(fd);
-	dup2(end[1], 1);
-	fds_closer(end);
+	if (dup2(fd, 0) == -1 || dup2(end[1], 1) == -1)
+		(close(fd), fds_closer(end), exit(1));
+	(close(fd), fds_closer(end));
 	if (execve(path, commands, env) < 0)
 		exit(1);
 }
